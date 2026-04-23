@@ -1,0 +1,1541 @@
+DOJO
+
+MANUAL COMPLETO DE CONSTRUCCIÓN WEB
+
+Sitio Web + Panel Administrativo
+
+Paleta de Color | Rojo Principal | Dorado | Fondo Claro
+#262626 | #D10A0A | #C9A84C | #F2F2F2
+
+1. VISIÓN GENERAL DEL PROYECTO
+
+Arquitectura y objetivos del sitio
+
+1.1 Descripción del sitio
+
+El sitio es la presencia digital oficial del dojo de artes marciales.
+Está compuesto por dos partes principales:
+
+- Sitio público (frontend): visible para todos los visitantes, con
+  información del dojo, clases, shop y formularios.
+
+- Panel Administrativo (admin): área privada donde el dueño puede
+  gestionar todo el contenido sin tocar código.
+
+> *💡 El sitio fue diseñado para que el administrador tenga control
+> total del contenido. La idea es que cualquier texto, imagen o producto
+> pueda actualizarse desde el panel sin necesidad de un desarrollador.*
+
+1.2 Inspiración visual
+
+El diseño sigue la estética del sitio Gymbox.com: oscuro, impactante,
+con grandes imágenes hero, carruseles de contenido y tipografía en
+mayúsculas. Adaptado para un dojo de artes marciales.
+
+- Fondo base: blanco (#FFFFFF) y gris claro (#F2F2F2)
+
+- Color primario: Rojo #D10A0A (acción, botones, títulos destacados)
+
+- Color secundario: Dorado #C9A84C (jerarquía, rangos, detalles premium)
+
+- Color oscuro: #262626 (header, footer, textos principales)
+
+- Tipografía: Sans-serif bold en mayúsculas para headings (ej: Inter,
+  Bebas Neue u Oswald)
+
+1.3 Principios de diseño
+
+- Consistencia visual: todas las páginas comparten el mismo header,
+  footer y paleta.
+
+- Mobile-first: diseño pensado desde el móvil hacia arriba.
+
+- Simplicidad del admin: el panel no es Elementor. Tiene bloques
+  predefinidos simples.
+
+- WhatsApp como canal principal: inscripciones, compras y consultas van
+  a WhatsApp.
+
+2. STACK TECNOLÓGICO
+
+Tecnologías recomendadas para el proyecto
+
+2.1 Tecnologías principales
+
+Se recomienda el mismo stack que Freeman Streetwear, ya probado y
+funcional:
+
+  --------------------------------------------------------------------------
+  **Tecnología**            **Uso**
+  ------------------------- ------------------------------------------------
+  **Next.js 14 (App         Framework principal - SSR/SSG, rutas, API
+  Router)**                 
+
+  **TypeScript**            Tipado estático en todo el proyecto
+
+  **Tailwind CSS**          Estilos utilitarios, responsivo
+
+  **Supabase**              Base de datos PostgreSQL + Storage de imágenes
+
+  **Supabase Auth**         Autenticación del panel admin
+
+  **Vercel**                Deploy y hosting
+
+  **Zustand**               Estado global (carrito, UI)
+
+  **react-beautiful-dnd**   Drag & drop del page builder
+
+  **React Quill / TipTap**  Editor de texto enriquecido
+
+  **React Hook Form**       Manejo de formularios
+  --------------------------------------------------------------------------
+
+> *💡 Para este proyecto no es necesario Zustand (no hay carrito). Solo
+> se usa para estado de UI como menú mobile o modal de galería.*
+
+2.2 Estructura del proyecto Next.js
+
+> dojo-web/
+>
+> ├── app/ # App Router
+>
+> │ ├── (site)/ # Grupo de rutas públicas
+>
+> │ │ ├── layout.tsx # Layout con Header y Footer
+>
+> │ │ ├── home/page.tsx
+>
+> │ │ ├── inscripciones/page.tsx
+>
+> │ │ ├── shop/
+>
+> │ │ │ ├── page.tsx # Listado de productos
+>
+> │ │ │ └── [slug]/page.tsx # Detalle de producto
+>
+> │ │ ├── clases/
+>
+> │ │ │ ├── page.tsx
+>
+> │ │ │ └── [slug]/page.tsx # karate-do, aikido, etc.
+>
+> │ │ ├── ubicacion/page.tsx
+>
+> │ │ ├── contacto/page.tsx
+>
+> │ │ └── informacion/page.tsx
+>
+> │ ├── (admin)/ # Grupo de rutas admin (protegidas)
+>
+> │ │ ├── layout.tsx # Layout admin con Sidebar
+>
+> │ │ ├── admin/page.tsx # Dashboard
+>
+> │ │ ├── admin/login/page.tsx
+>
+> │ │ ├── admin/pages/
+>
+> │ │ ├── admin/shop/
+>
+> │ │ ├── admin/clases/
+>
+> │ │ ├── admin/galeria/
+>
+> │ │ ├── admin/profesores/
+>
+> │ │ ├── admin/inscripciones/
+>
+> │ │ └── admin/configuracion/
+>
+> │ └── api/ # API Routes
+>
+> │ ├── blocks/route.ts # CRUD de bloques
+>
+> │ ├── products/route.ts
+>
+> │ └── upload/route.ts # Subida de imágenes
+>
+> ├── components/
+>
+> │ ├── site/ # Componentes del sitio público
+>
+> │ │ ├── Header.tsx
+>
+> │ │ ├── Footer.tsx
+>
+> │ │ ├── blocks/ # Componentes de cada bloque
+>
+> │ │ └── ui/
+>
+> │ └── admin/ # Componentes del panel admin
+>
+> │ ├── Sidebar.tsx
+>
+> │ ├── PageBuilder.tsx
+>
+> │ └── blocks/ # Editores de bloques
+>
+> ├── lib/
+>
+> │ ├── supabase/
+>
+> │ │ ├── client.ts
+>
+> │ │ └── server.ts
+>
+> │ ├── whatsapp.ts # Generador de links WA
+>
+> │ └── types.ts # Tipos TypeScript
+>
+> ├── middleware.ts # Protección rutas admin
+>
+> └── .env.local
+
+3. BASE DE DATOS
+
+Estructura completa de Supabase
+
+3.1 Esquema de tablas
+
+  -------------------------------------------------------------------------
+  **Tabla**           **Columnas             **Descripción**
+                      principales**          
+  ------------------- ---------------------- ------------------------------
+  **pages**           id, slug, title,       Páginas del sitio
+                      meta_desc,             configurables
+                      is_published           
+
+  **page_blocks**     id, page_id,           Bloques de contenido de cada
+                      block_type, content    página
+                      (JSONB), order_index   
+
+  **products**        id, name, slug, price, Productos del shop
+                      description,           
+                      image_path, is_active  
+
+  **classes**         id, slug, name,        Disciplinas del dojo
+                      description, schedule  
+                      (JSONB), image_path    
+
+  **teachers**        id, name, bio,         Profesores del dojo
+                      image_path, rank,      
+                      classes[]            
+
+  **gallery**         id, image_path,        Fotos del dojo (clases,
+                      category, title,       eventos, torneos)
+                      order_index            
+
+  **registrations**   id, name, age, phone,  Formularios de inscripción
+                      class_id, created_at   recibidos
+
+  **site_config**     key, value (JSONB)     Config global: WhatsApp,
+                                             redes, SEO, etc.
+  -------------------------------------------------------------------------
+
+3.2 SQL de creación
+
+Ejecutar en el SQL Editor de Supabase:
+
+> -- Páginas del sitio
+>
+> CREATE TABLE pages (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> slug TEXT UNIQUE NOT NULL,
+>
+> title TEXT NOT NULL,
+>
+> meta_desc TEXT,
+>
+> is_published BOOLEAN DEFAULT true,
+>
+> created_at TIMESTAMPTZ DEFAULT now()
+>
+> );
+>
+> -- Bloques de cada página (para el page builder)
+>
+> CREATE TABLE page_blocks (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> page_id UUID REFERENCES pages(id) ON DELETE CASCADE,
+>
+> block_type TEXT NOT NULL, --
+> 'banner','text','image','gallery','button','products','form'
+>
+> content JSONB NOT NULL DEFAULT '{}',
+>
+> order_index INTEGER NOT NULL DEFAULT 0,
+>
+> is_visible BOOLEAN DEFAULT true,
+>
+> created_at TIMESTAMPTZ DEFAULT now()
+>
+> );
+>
+> -- Productos del shop
+>
+> CREATE TABLE products (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> name TEXT NOT NULL,
+>
+> slug TEXT UNIQUE NOT NULL,
+>
+> price NUMERIC(10,2) NOT NULL,
+>
+> description TEXT,
+>
+> image_path TEXT,
+>
+> sizes TEXT[], -- ej: ['XS','S','M','L','XL']
+>
+> is_active BOOLEAN DEFAULT true,
+>
+> order_index INTEGER DEFAULT 0,
+>
+> created_at TIMESTAMPTZ DEFAULT now()
+>
+> );
+>
+> -- Disciplinas del dojo
+>
+> CREATE TABLE classes (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> slug TEXT UNIQUE NOT NULL, -- 'karate-do', 'aikido', etc.
+>
+> name TEXT NOT NULL,
+>
+> description TEXT,
+>
+> schedule JSONB DEFAULT '[]', -- [{day:'Lunes', time:'18:00-19:30', level:'Todos'}]
+>
+> image_path TEXT,
+>
+> is_active BOOLEAN DEFAULT true
+>
+> );
+>
+> -- Profesores
+>
+> CREATE TABLE teachers (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> name TEXT NOT NULL,
+>
+> bio TEXT,
+>
+> rank TEXT,
+>
+> image_path TEXT,
+>
+> order_index INTEGER DEFAULT 0
+>
+> );
+>
+> -- Galería
+>
+> CREATE TABLE gallery (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> image_path TEXT NOT NULL,
+>
+> category TEXT DEFAULT 'general', --
+> 'clases','eventos','torneos'
+>
+> title TEXT,
+>
+> order_index INTEGER DEFAULT 0
+>
+> );
+>
+> -- Inscripciones
+>
+> CREATE TABLE registrations (
+>
+> id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+>
+> name TEXT NOT NULL,
+>
+> age INTEGER,
+>
+> phone TEXT NOT NULL,
+>
+> class_id UUID REFERENCES classes(id),
+>
+> notes TEXT,
+>
+> created_at TIMESTAMPTZ DEFAULT now()
+>
+> );
+>
+> -- Configuración global del sitio
+>
+> CREATE TABLE site_config (
+>
+> key TEXT PRIMARY KEY,
+>
+> value JSONB NOT NULL
+>
+> );
+>
+> -- Insertar config inicial
+>
+> INSERT INTO site_config (key, value) VALUES
+>
+> ('whatsapp', '"5493514XXXXXXX"'),
+>
+> ('dojo_name', '"Nombre del Dojo"'),
+>
+> ('address', '"Dirección del dojo, Ciudad"'),
+>
+> ('google_maps_url', '"https://maps.google.com/..."'),
+>
+> ('instagram', '"@dojo_handle"'),
+>
+> ('facebook', '"https://facebook.com/dojo"');
+
+3.3 Storage Buckets
+
+- Crear bucket: product-images (público)
+
+- Crear bucket: gallery (público)
+
+- Crear bucket: teachers (público)
+
+- Crear bucket: content (público) --- para imágenes del page builder
+
+> **⚠️ Activar RLS en todas las tablas. Solo el admin autenticado puede
+> escribir (INSERT/UPDATE/DELETE). Lectura pública para productos,
+> clases, galería, profesores, site_config y page_blocks.**
+
+4. RUTAS DEL SITIO PÚBLICO
+
+Todas las páginas del cliente
+
+4.1 Mapa de rutas
+
+  -----------------------------------------------------------------------------------
+  **Ruta**                       **Descripción**
+  ------------------------------ ----------------------------------------------------
+  **/**                          Redirige a /home
+
+  **/home**                      Página principal - Landing page del dojo
+
+  **/inscripciones**             Formularios de inscripción con botón a WhatsApp
+
+  **/shop**                      Listado de productos disponibles
+
+  **/shop/[slug]**               Detalle individual de producto
+
+  **/clases**                    Descripción general de todas las clases
+
+  **/clases/karate-do**          Página específica de Karate-Do
+
+  **/clases/aikido**             Página específica de Aikido
+
+  **/clases/kobudo**             Página específica de Kobudo
+
+  **/clases/defensa-personal**   Página de Defensa Personal
+
+  **/ubicacion**                 Mapa, dirección y cómo llegar
+
+  **/contacto**                  Formulario de contacto + WhatsApp
+
+  **/informacion**               Información general, reglamentos, FAQ
+  -----------------------------------------------------------------------------------
+
+4.2 Layout del sitio
+
+Todas las rutas de (site) comparten el mismo layout.tsx con:
+
+- Header fijo (sticky): logo + navegación + botón 'Inscribirse' en
+  rojo
+
+- Footer oscuro (#262626): logo, links de navegación, redes sociales
+
+- Transición de páginas suave (opcional, como en Freeman Streetwear)
+
+El header colapsa en un menú hamburguesa en mobile.
+
+4.3 Página /home
+
+Es el corazón visual del sitio. Sus secciones recomendadas:
+
+1.  Hero Banner: video o imagen full-screen con overlay oscuro. Título
+    en mayúsculas grande, subtítulo y 2 botones (Inscribirse / Ver
+    Clases).
+
+2.  Sobre el Dojo: texto introductorio + imagen lateral. Similar a la
+    sección 'About GymBox'.
+
+3.  Clases destacadas: carrusel horizontal de las 4 disciplinas con
+    imagen, título y botón 'Ver más'.
+
+4.  Stats del dojo: fila de datos (ej: 'Más de 200 alumnos', '3
+    profesores', '15 años de experiencia').
+
+5.  Galería preview: 6 imágenes en grid con botón 'Ver galería
+    completa'.
+
+6.  Llamada a la acción: sección con fondo rojo, texto grande y botón de
+    WhatsApp.
+
+> *💡 El contenido de esta página viene de los bloques configurados en
+> el page builder del admin. Si no hay bloques configurados, mostrar un
+> placeholder con instrucciones.*
+
+4.4 Página /clases y subrutas
+
+La ruta /clases muestra un grid con las 4 disciplinas. Cada tarjeta
+tiene:
+
+- Imagen de fondo con overlay
+
+- Nombre de la disciplina
+
+- Descripción corta
+
+- Botón 'Ver más'
+
+Cada subruta /clases/[slug] muestra el contenido completo de esa
+disciplina:
+
+- Banner con imagen y nombre
+
+- Descripción larga (rich text del admin)
+
+- Tabla de horarios (editable desde admin)
+
+- Botón WhatsApp: 'Quiero inscribirme en [nombre clase]'
+
+4.5 Página /shop
+
+Grid de productos con tarjetas que incluyen:
+
+- Imagen del producto
+
+- Nombre y precio
+
+- Botón 'Consultar por WhatsApp'
+
+Al hacer click en un producto, va a /shop/[slug] con más detalle. En
+el detalle:
+
+- Imagen grande
+
+- Nombre, precio, descripción
+
+- Selector de talle (si el producto tiene talles configurados)
+
+- Botón WhatsApp con mensaje dinámico: 'Hola! Quiero comprar [nombre]
+  talle [talle]'
+
+> *💡 No hay carrito ni checkout. El flujo de compra es 100% WhatsApp.*
+
+4.6 Página /inscripciones
+
+Formulario simple con los campos:
+
+- Nombre completo (texto)
+
+- Edad (número)
+
+- Teléfono (texto)
+
+- Disciplina de interés (select: Karate-Do / Aikido / Kobudo / Defensa
+  Personal)
+
+- Mensaje opcional (textarea)
+
+Al enviar, el formulario:
+
+7.  Guarda el registro en la tabla registrations de Supabase
+
+8.  Abre WhatsApp con mensaje prearmado: 'Hola! Me llamo [nombre],
+    tengo [edad] años y quiero inscribirme en [clase]. Mi teléfono
+    es [tel].'
+
+> *💡 El número de WhatsApp y el mensaje base se configuran desde el
+> admin en Configuración global.*
+
+4.7 Páginas /ubicacion, /contacto, /informacion
+
+/ubicacion: Google Maps embed (URL configurable desde admin) +
+dirección + horarios del dojo.
+
+/contacto: Formulario básico (nombre, email, mensaje) + botón WhatsApp
+directo.
+
+/informacion: Página estática con información general, reglamento, FAQ.
+Contenido editable desde admin (rich text).
+
+5. PANEL ADMINISTRATIVO
+
+Diseño y funcionalidades del admin
+
+5.1 Acceso y autenticación
+
+El admin utiliza Supabase Auth. Flujo:
+
+9.  Admin va a /admin/login
+
+10. Ingresa email + password
+
+11. Supabase Auth verifica credenciales
+
+12. Si es válido, redirige a /admin (dashboard)
+
+El middleware.ts de Next.js protege todas las rutas /admin/*. Si no hay
+sesión activa, redirige a /admin/login.
+
+> // middleware.ts
+>
+> import { createMiddlewareClient } from
+> '@supabase/auth-helpers-nextjs'
+>
+> export async function middleware(req) {
+>
+> const res = NextResponse.next()
+>
+> const supabase = createMiddlewareClient({ req, res })
+>
+> const { data: { session } } = await supabase.auth.getSession()
+>
+> if (!session && req.nextUrl.pathname.startsWith('/admin')) {
+>
+> return NextResponse.redirect(new URL('/admin/login', req.url))
+>
+> }
+>
+> return res
+>
+> }
+
+5.2 Dashboard (/admin)
+
+Vista de bienvenida con:
+
+- Resumen rápido: cantidad de productos activos, inscripciones del mes,
+  fotos en galería
+
+- Accesos directos a las secciones más usadas
+
+- Link al sitio público (abrir en nueva pestaña)
+
+5.3 Rutas del panel admin
+
+  ----------------------------------------------------------------------------
+  **Ruta Admin**             **Función**
+  -------------------------- -------------------------------------------------
+  **/admin**                 Dashboard principal
+
+  **/admin/login**           Inicio de sesión admin
+
+  **/admin/pages**           Gestión de páginas (page builder)
+
+  **/admin/pages/[id]**      Editor de página específica
+
+  **/admin/shop**            Listado de productos
+
+  **/admin/shop/nuevo**      Crear nuevo producto
+
+  **/admin/shop/[id]**       Editar producto existente
+
+  **/admin/clases**          Gestión de clases y horarios
+
+  **/admin/galeria**         Gestión de galería de fotos
+
+  **/admin/profesores**      ABM de profesores
+
+  **/admin/inscripciones**   Ver inscripciones recibidas
+
+  **/admin/configuracion**   Config global: WhatsApp, redes, SEO
+
+  **/admin/contenido**       Textos globales e imágenes del sitio
+  ----------------------------------------------------------------------------
+
+5.4 Layout del admin
+
+El layout del admin tiene:
+
+- Sidebar izquierda con la navegación de secciones (icons + texto)
+
+- Header superior con nombre del admin + botón de logout
+
+- Área de contenido principal (el lado derecho)
+
+En mobile, el sidebar colapsa en un menú hamburguesa o un bottom navbar.
+
+> *💡 El admin usa la misma paleta de colores que el sitio: blanco
+> (#FFFFFF) como fondo, rojo (#D10A0A) para acciones primarias y dorado
+> (#C9A84C) para highlights.*
+
+6. PAGE BUILDER
+
+Sistema de bloques de contenido
+
+6.1 Filosofía del page builder
+
+El page builder NO es Elementor ni un editor libre. Es un sistema de
+bloques predefinidos con configuración simple. Cada página tiene una
+lista de bloques ordenados que se pueden:
+
+- Agregar (elegir de una lista de tipos)
+
+- Reordenar (drag & drop)
+
+- Editar (formulario específico de ese bloque)
+
+- Ocultar / mostrar (toggle sin borrar)
+
+- Eliminar
+
+> **⚠️ No es un editor de píxeles. El admin configura el contenido
+> (texto, imagen, color de fondo, etc.), pero el diseño visual lo define
+> el desarrollador en el código del componente.**
+
+6.2 Tipos de bloques disponibles
+
+**Bloque: BANNER**
+
+Ocupa el 100% del ancho de la pantalla. Configuración:
+
+- Imagen de fondo (subida desde Storage)
+
+- Texto principal (título grande)
+
+- Texto secundario (subtítulo)
+
+- Color de overlay (por defecto semi-transparente negro)
+
+- Botón 1: texto + URL (opcional)
+
+- Botón 2: texto + URL (opcional)
+
+- Altura: 'full' (100vh) o 'medium' (60vh) o 'small' (40vh)
+
+Estructura JSON del bloque:
+
+> { "type": "banner",
+>
+> "content": {
+>
+> "image_url": "https://...",
+>
+> "title": "KARATE-DO",
+>
+> "subtitle": "El camino del puño vacío",
+>
+> "overlay_opacity": 0.5,
+>
+> "height": "full",
+>
+> "btn1_text": "Inscribirse",
+>
+> "btn1_url": "/inscripciones",
+>
+> "btn2_text": "Ver horarios",
+>
+> "btn2_url": "#horarios"
+>
+> }
+>
+> }
+
+**Bloque: TEXTO**
+
+Sección de texto enriquecido. Configuración:
+
+- Título de sección (opcional)
+
+- Contenido HTML (editor rich text tipo TipTap o ReactQuill)
+
+- Alineación: izquierda / centro / derecha
+
+- Fondo: blanco / gris claro / oscuro
+
+> { "type": "text",
+>
+> "content": {
+>
+> "title": "Sobre el dojo",
+>
+> "body": "<p>El dojo fue fundado...</p>",
+>
+> "align": "left",
+>
+> "bg": "white"
+>
+> }
+>
+> }
+
+**Bloque: IMAGEN**
+
+Imagen standalone con caption. Configuración:
+
+- Imagen (subida desde Storage)
+
+- Caption (texto debajo, opcional)
+
+- Ancho: 'full' / 'contained' (máx 800px)
+
+**Bloque: IMAGEN + TEXTO (lado a lado)**
+
+Grid de dos columnas: imagen a la izquierda, texto a la derecha (o
+viceversa). Configuración:
+
+- Imagen
+
+- Lado de la imagen: izquierda / derecha
+
+- Título
+
+- Párrafo de texto
+
+- Botón (opcional): texto + URL
+
+**Bloque: GALERÍA**
+
+Grid de imágenes con lightbox. Configuración:
+
+- Categoría de galería a mostrar (o 'todas')
+
+- Cantidad máxima de imágenes a mostrar (6, 9, 12)
+
+- Mostrar botón 'Ver más' (sí/no) → link a /galeria o a galería
+  filtrada
+
+**Bloque: CARRUSEL**
+
+Slider horizontal de tarjetas con imagen. Configuración:
+
+- Items del carrusel: cada item tiene imagen, título, subtítulo, link
+
+- Autoplay: sí/no + velocidad
+
+- Flechas de navegación: sí/no
+
+**Bloque: STATS / DESTACADOS**
+
+Fila de métricas visuales. Configuración:
+
+- Lista de stats: cada stat tiene número/valor y etiqueta (ej: '200+
+  Alumnos', '15 Años')
+
+- Fondo: blanco / oscuro / rojo
+
+**Bloque: PRODUCTOS DESTACADOS**
+
+Grid con los productos marcados como destacados del shop. Sin
+configuración especial --- toma automáticamente los productos activos.
+
+**Bloque: FORMULARIO DE INSCRIPCIÓN**
+
+Incrusta el formulario de inscripción en cualquier página. Sin
+configuración (usa los datos globales de WhatsApp).
+
+**Bloque: BOTÓN WHATSAPP**
+
+CTA grande con botón de WhatsApp. Configuración:
+
+- Texto principal (ej: '¿Listo para empezar?')
+
+- Subtexto (opcional)
+
+- Mensaje de WhatsApp a enviar
+
+- Fondo: blanco / rojo / oscuro
+
+**Bloque: EMBED VIDEO**
+
+Embed de YouTube. Configuración:
+
+- URL del video de YouTube
+
+- Título del bloque (opcional)
+
+**Bloque: MAPA**
+
+Incrusta Google Maps. Configuración:
+
+- URL de Google Maps Embed (se obtiene desde Google Maps > Compartir >
+  Insertar mapa)
+
+- Altura del mapa en px
+
+6.3 Implementación del Page Builder
+
+El page builder en la ruta /admin/pages/[id] tiene:
+
+13. Panel izquierdo: lista de bloques actuales de esa página (ordenables
+    con drag & drop)
+
+14. Botón '+ Agregar bloque': abre un modal para elegir el tipo de
+    bloque
+
+15. Al hacer click en un bloque de la lista: abre su editor a la derecha
+
+16. Botones: Guardar, Preview (nueva pestaña), Publicar/Ocultar página
+
+El drag & drop actualiza el campo order_index de cada bloque en
+Supabase.
+
+> // Ejemplo de guardar orden después de drag & drop
+>
+> const reorderedBlocks = blocks.map((block, index) => ({
+>
+> ...block,
+>
+> order_index: index
+>
+> }))
+>
+> await supabase.from('page_blocks').upsert(reorderedBlocks)
+
+6.4 Páginas configurables vs. páginas fijas
+
+No todas las páginas necesitan el page builder:
+
+  ----------------------------------------------------------------------------
+  **Página**             **Tipo**           **Nota**
+  ---------------------- ------------------ ----------------------------------
+  **/home**              Page Builder       100% configurable
+
+  **/clases/[slug]**     Semi-fija          Estructura fija, contenido
+                                            editable
+
+  **/shop**              Fija               Generada desde tabla products
+
+  **/inscripciones**     Fija               Formulario siempre igual
+
+  **/informacion**       Page Builder       Bloques de texto editables
+  ----------------------------------------------------------------------------
+
+7. GESTIÓN DEL SHOP
+
+Productos con integración WhatsApp
+
+7.1 ABM de productos
+
+Desde /admin/shop el admin puede crear, editar y eliminar productos. El
+formulario de producto tiene:
+
+- Nombre del producto
+
+- Precio (número con 2 decimales)
+
+- Descripción (rich text básico)
+
+- Imagen (subida a Supabase Storage, bucket 'product-images')
+
+- Talles disponibles (checkbox: XS, S, M, L, XL, XXL, Única talla)
+
+- Activo / Inactivo (toggle)
+
+- Destacado (toggle --- aparece en el bloque 'Productos Destacados'
+  del page builder)
+
+7.2 Generación del link de WhatsApp
+
+La función whatsapp.ts genera el link dinámicamente:
+
+> // lib/whatsapp.ts
+>
+> export function buildWhatsAppLink({
+>
+> phone, // ej: '5493514XXXXXXX'
+>
+> productName, // ej: 'Remera Karate blanca'
+>
+> size, // ej: 'M'
+>
+> }: WhatsAppProductParams): string {
+>
+> const msg = size
+>
+> ? `Hola! Quiero comprar el producto '${productName}' en talle
+> ${size}.`
+>
+> : `Hola! Quiero comprar el producto '${productName}'.`
+>
+> return `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
+>
+> }
+
+El número de WhatsApp se obtiene de site_config en Supabase.
+
+7.3 Flujo de compra
+
+17. Cliente navega a /shop
+
+18. Ve el grid de productos con imagen, nombre y precio
+
+19. Hace click en un producto → va a /shop/[slug]
+
+20. Selecciona el talle (si aplica)
+
+21. Hace click en 'Consultar por WhatsApp'
+
+22. Se abre WhatsApp con el mensaje prearmado
+
+23. El dueño cierra la venta manualmente por chat
+
+8. GALERÍA DE FOTOS
+
+Gestión visual del dojo
+
+8.1 Panel de galería
+
+Desde /admin/galeria el admin puede:
+
+- Subir múltiples imágenes a la vez (drag & drop o file picker)
+
+- Asignar categoría a cada foto: 'clases', 'eventos', 'torneos',
+  'general'
+
+- Agregar título/caption a cada foto
+
+- Reordenar las fotos con drag & drop
+
+- Eliminar fotos (borra de Supabase Storage + tabla gallery)
+
+8.2 Uso de la galería en el sitio
+
+El bloque 'GALERÍA' del page builder consume la tabla gallery
+filtrando por categoría. La ruta pública /galeria (opcional) muestra
+todas las fotos con filtro por categoría.
+
+9. GESTIÓN DE INSCRIPCIONES
+
+Formularios y seguimiento
+
+9.1 Flujo de inscripción
+
+24. Cliente completa el formulario en /inscripciones
+
+25. Se guarda el registro en la tabla registrations de Supabase
+
+26. Se abre WhatsApp automáticamente con mensaje prearmado
+
+27. El admin puede ver todas las inscripciones en /admin/inscripciones
+
+9.2 Panel de inscripciones
+
+Vista de tabla con todas las inscripciones. Columnas:
+
+- Fecha y hora de inscripción
+
+- Nombre del alumno
+
+- Edad
+
+- Teléfono (link clickeable a WhatsApp)
+
+- Clase seleccionada
+
+- Botón 'Contactar por WhatsApp'
+
+El admin puede filtrar por clase y exportar a CSV (opcional).
+
+9.3 Mensaje de WhatsApp para inscripciones
+
+> // lib/whatsapp.ts
+>
+> export function buildRegistrationMessage({
+>
+> name, age, phone, className
+>
+> }: RegistrationParams): string {
+>
+> return `Hola! Me llamo ${name}, tengo ${age} años y quiero
+> inscribirme en ${className}. Mi contacto es ${phone}.`
+>
+> }
+
+10. CONFIGURACIÓN GLOBAL
+
+WhatsApp, redes sociales y SEO
+
+10.1 Datos del dojo
+
+- Nombre del dojo
+
+- Dirección completa
+
+- Teléfono general
+
+- Email de contacto
+
+- URL de Google Maps Embed
+
+- Horarios de atención (texto libre)
+
+10.2 WhatsApp
+
+- Número de WhatsApp (formato internacional: 549351XXXXXXXX para
+  Argentina)
+
+- Mensaje de bienvenida por defecto
+
+- Mensaje de inscripción base
+
+- Mensaje de consulta de producto base
+
+> *💡 Todos los mensajes de WhatsApp son templates que se completan con
+> datos dinámicos. El admin define el texto base, el sistema agrega los
+> datos del formulario/producto.*
+
+10.3 Redes sociales
+
+- URL de Instagram
+
+- URL de Facebook
+
+- URL de YouTube (opcional)
+
+10.4 SEO global
+
+- Título del sitio (aparece en todas las páginas como sufijo: 'Karate
+  Do | Nombre Dojo')
+
+- Descripción meta global
+
+- Imagen Open Graph por defecto
+
+10.5 Branding
+
+- Logo principal (subida a Storage)
+
+- Favicon
+
+- Color primario (hex) --- por defecto #D10A0A
+
+> *💡 El color primario se guarda en site_config y se usa como CSS
+> custom property (--color-primary) en el layout. Permite cambiar el
+> color de acento sin tocar código.*
+
+11. COMPONENTES CLAVE
+
+Código de referencia para la IA
+
+11.1 Estructura del Header
+
+> // components/site/Header.tsx
+>
+> 'use client'
+>
+> import Link from 'next/link'
+>
+> import { useState } from 'react'
+>
+> export function Header() {
+>
+> const [menuOpen, setMenuOpen] = useState(false)
+>
+> return (
+>
+> <header className='fixed top-0 left-0 right-0 z-50
+> bg-[#262626]'>
+>
+> <div className='max-w-7xl mx-auto flex items-center justify-between
+> px-4 py-3'>
+>
+> <Link href='/home'>
+>
+> <img src='/logo.png' alt='Dojo' className='h-12 w-auto' />
+>
+> </Link>
+>
+> {/* Desktop nav */}
+>
+> <nav className='hidden md:flex gap-6'>
+>
+> {['Clases','Shop','Inscripciones','Ubicación'].map(item =>
+> (
+>
+> <Link key={item} href={`/${item.toLowerCase()}`}
+>
+> className='text-white hover:text-[#D10A0A] transition font-medium
+> text-sm'>
+>
+> {item}
+>
+> </Link>
+>
+> ))}
+>
+> </nav>
+>
+> <Link href='/inscripciones'
+>
+> className='bg-[#D10A0A] text-white px-4 py-2 text-sm font-bold
+> hover:bg-red-700 transition'>
+>
+> INSCRIBIRSE
+>
+> </Link>
+>
+> </div>
+>
+> </header>
+>
+> )
+>
+> }
+
+11.2 Renderizador de bloques
+
+> // components/site/BlockRenderer.tsx
+>
+> import { BannerBlock } from './blocks/BannerBlock'
+>
+> import { TextBlock } from './blocks/TextBlock'
+>
+> import { GalleryBlock } from './blocks/GalleryBlock'
+>
+> // ... otros bloques
+>
+> export function BlockRenderer({ block }: { block: PageBlock }) {
+>
+> if (!block.is_visible) return null
+>
+> switch (block.block_type) {
+>
+> case 'banner': return <BannerBlock content={block.content} />
+>
+> case 'text': return <TextBlock content={block.content} />
+>
+> case 'gallery': return <GalleryBlock content={block.content} />
+>
+> case 'products': return <ProductsBlock content={block.content} />
+>
+> case 'form': return <RegistrationForm />
+>
+> case 'whatsapp_cta': return <WhatsAppCTA content={block.content}
+> />
+>
+> default: return null
+>
+> }
+>
+> }
+
+11.3 Página pública que carga bloques
+
+> // app/(site)/home/page.tsx
+>
+> import { createServerClient } from '@/lib/supabase/server'
+>
+> import { BlockRenderer } from '@/components/site/BlockRenderer'
+>
+> export default async function HomePage() {
+>
+> const supabase = createServerClient()
+>
+> const { data: page } = await supabase
+>
+> .from('pages')
+>
+> .select('id')
+>
+> .eq('slug', 'home')
+>
+> .single()
+>
+> const { data: blocks } = await supabase
+>
+> .from('page_blocks')
+>
+> .select('*')
+>
+> .eq('page_id', page?.id)
+>
+> .order('order_index')
+>
+> return (
+>
+> <main>
+>
+> {blocks?.map(block => (
+>
+> <BlockRenderer key={block.id} block={block} />
+>
+> ))}
+>
+> </main>
+>
+> )
+>
+> }
+
+12. PASOS DE CONSTRUCCIÓN
+
+Orden recomendado de implementación
+
+12.1 Fase 1 --- Fundamentos (Semana 1)
+
+28. Crear proyecto Next.js 14 con TypeScript y Tailwind
+
+29. Configurar Supabase: crear proyecto, ejecutar SQL de tablas
+
+30. Crear buckets de Storage en Supabase
+
+31. Configurar variables de entorno (.env.local)
+
+32. Implementar middleware de autenticación
+
+33. Crear layout base del sitio (Header + Footer)
+
+34. Crear layout base del admin (Sidebar)
+
+12.2 Fase 2 --- Admin Core (Semana 2)
+
+35. Página de login admin
+
+36. Dashboard admin
+
+37. ABM de Clases (horarios, descripción, imagen)
+
+38. ABM de Productos (shop)
+
+39. ABM de Profesores
+
+40. Galería: subida múltiple + reordenamiento
+
+41. Vista de Inscripciones recibidas
+
+12.3 Fase 3 --- Page Builder (Semana 3)
+
+42. Implementar tabla page_blocks en Supabase
+
+43. Crear los componentes visuales de cada bloque
+
+44. Crear los formularios editores de cada bloque
+
+45. Implementar drag & drop para reordenar bloques
+
+46. Implementar el BlockRenderer en el frontend
+
+47. Conectar la página /home al page builder
+
+12.4 Fase 4 --- Sitio Público (Semana 3-4)
+
+48. Crear todas las rutas del sitio
+
+49. Página /clases con carrusel de disciplinas
+
+50. Páginas /clases/[slug] dinámicas
+
+51. Página /shop con grid de productos
+
+52. Página /shop/[slug] con detalle
+
+53. Formulario /inscripciones con integración WhatsApp
+
+54. Páginas /ubicacion, /contacto, /informacion
+
+12.5 Fase 5 --- Pulido y Deploy (Semana 4)
+
+55. Configuración global (WhatsApp, redes, SEO)
+
+56. Responsivo mobile en todas las páginas
+
+57. Optimización de imágenes (next/image)
+
+58. Meta tags SEO dinámicos
+
+59. Deploy en Vercel
+
+60. Pruebas end-to-end de todos los flujos
+
+13. VARIABLES DE ENTORNO
+
+Configuración de .env.local
+
+Crear el archivo .env.local en la raíz del proyecto con:
+
+> # Supabase
+>
+> NEXT_PUBLIC_SUPABASE_URL=https://XXXXXXXXXXXX.supabase.co
+>
+> NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+>
+> SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+>
+> # App
+>
+> NEXT_PUBLIC_SITE_URL=https://dojo.vercel.app
+>
+> NEXT_PUBLIC_WHATSAPP_NUMBER=5493514XXXXXXX
+>
+> **⚠️ SUPABASE_SERVICE_ROLE_KEY nunca debe estar en el cliente. Solo
+> usarla en API routes o server components para operaciones de admin.**
+
+14. PROMPT BASE PARA IA
+
+Cómo pedirle a la IA que construya el sitio
+
+14.1 Instrucciones generales
+
+Al pedirle a la IA (Claude, ChatGPT, Cursor, etc.) que construya el
+sitio, usá este prompt base:
+
+> Estoy construyendo el sitio web de un dojo de artes marciales en
+> Argentina.
+>
+> Stack: Next.js 14 App Router, TypeScript, Tailwind CSS, Supabase.
+>
+> Paleta de colores:
+>
+> - Rojo principal: #D10A0A (botones primarios, highlights)
+>
+> - Oscuro: #262626 (header, footer)
+>
+> - Dorado: #C9A84C (detalles, jerarquía)
+>
+> - Fondo claro: #F2F2F2 y blanco
+>
+> Características clave:
+>
+> - El sitio tiene un panel admin con page builder basado en bloques
+>
+> - No hay carrito ni checkout. Las ventas y consultas van a WhatsApp
+>
+> - El admin puede editar textos, imágenes, productos y horarios
+>
+> - Diseño similar a gymbox.com: oscuro, impactante, tipografía bold en
+> mayúsculas
+
+14.2 Prompts específicos por sección
+
+Para el Header:
+
+> Creá el componente Header.tsx para el sitio del dojo. Debe:
+>
+> - Ser sticky (fijo al hacer scroll)
+>
+> - Fondo #262626, logo a la izquierda
+>
+> - Navegación desktop: Inicio, Clases, Shop, Inscripciones, Ubicación
+>
+> - Botón "INSCRIBIRSE" en #D10A0A a la derecha
+>
+> - En mobile: menú hamburguesa que despliega el menú
+
+Para el Page Builder:
+
+> Creá el componente PageBuilder.tsx para el admin. Debe:
+>
+> - Mostrar la lista de bloques de una página ordenados por order_index
+>
+> - Permitir drag & drop para reordenar (usar react-beautiful-dnd)
+>
+> - Botón "+ Agregar bloque" que abre un modal con los tipos
+> disponibles
+>
+> - Al clickear un bloque, mostrar su editor específico
+>
+> - Guardar automáticamente el nuevo orden en Supabase al soltar
+
+Para los bloques de la galería:
+
+> Creá el componente GalleryBlock.tsx. Recibe como prop:
+>
+> content: { category: string, max_items: number, show_more_btn: boolean
+> }
+>
+> Debe cargar imágenes de Supabase filtradas por categoría, mostrarlas
+> en un
+>
+> grid de 3 columnas (mobile: 2 columnas), con lightbox al hacer click.
+
+15. CHECKLIST DE COMPLETITUD
+
+Verificar antes del lanzamiento
+
+15.1 Base de datos
+
+[ ] Tablas creadas: pages, page_blocks, products, classes, teachers,
+gallery, registrations, site_config
+
+[ ] RLS activado en todas las tablas
+
+[ ] Políticas de lectura pública configuradas
+
+[ ] Políticas de escritura solo admin configuradas
+
+[ ] Buckets de Storage creados (product-images, gallery, teachers,
+content)
+
+[ ] Datos iniciales insertados en site_config
+
+[ ] Páginas base insertadas en tabla pages (home, shop, inscripciones,
+etc.)
+
+15.2 Admin
+
+[ ] Login funciona correctamente
+
+[ ] Middleware protege todas las rutas /admin/*
+
+[ ] ABM de productos completo (crear, editar, eliminar)
+
+[ ] ABM de clases completo con horarios
+
+[ ] ABM de profesores completo
+
+[ ] Galería: subida múltiple, categorías, drag & drop, eliminación
+
+[ ] Page builder: agregar, reordenar, editar y eliminar bloques
+
+[ ] Configuración global: WhatsApp, redes, datos del dojo
+
+[ ] Vista de inscripciones recibidas
+
+15.3 Sitio público
+
+[ ] Todas las rutas funcionan sin errores
+
+[ ] Home carga bloques desde Supabase
+
+[ ] Páginas de clases cargan desde tabla classes
+
+[ ] Shop carga desde tabla products
+
+[ ] Botones de WhatsApp generan el link correcto
+
+[ ] Formulario de inscripción guarda en Supabase + abre WhatsApp
+
+[ ] Responsivo en mobile, tablet y desktop
+
+[ ] Imágenes optimizadas con next/image
+
+[ ] Meta tags SEO en todas las páginas
+
+15.4 Deploy
+
+[ ] Variables de entorno configuradas en Vercel
+
+[ ] Build sin errores
+
+[ ] Dominio personalizado configurado (si aplica)
+
+[ ] HTTPS activo
+
+[ ] Google Analytics o similar instalado (opcional)
+
+Fin del Manual
+
+*Este documento contiene toda la información necesaria para construir
+el sitio web del dojo usando IA o de forma manual.*
+
+Stack: Next.js · TypeScript · Tailwind CSS · Supabase · Vercel
