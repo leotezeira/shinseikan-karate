@@ -1,0 +1,351 @@
+PROJECT: DOJO WEB APP (SITE + ADMIN + PAGE BUILDER)
+
+GOAL:
+Construir completamente el sistema web del dojo siguiendo el manual técnico.
+Cada tarea debe ejecutarse en orden. No avanzar si la anterior no está completa.
+
+---
+
+## FASE 1 — SETUP Y FUNDAMENTOS
+
+[TASK-001]
+Crear proyecto con Next.js 14 (App Router), TypeScript y Tailwind CSS.
+
+[TASK-002]
+Configurar estructura inicial de carpetas según el manual (/app, /components, /lib, etc).
+
+[TASK-003]
+Instalar dependencias necesarias:
+
+* @supabase/supabase-js
+* @supabase/auth-helpers-nextjs
+* react-hook-form
+* react-beautiful-dnd
+* tiptap o react-quill
+
+[TASK-004]
+Crear archivo .env.local con variables de Supabase y entorno.
+
+[TASK-005]
+Configurar cliente Supabase en:
+
+* lib/supabase/client.ts
+* lib/supabase/server.ts
+
+[TASK-006]
+Crear proyecto en Supabase.
+
+[TASK-007]
+Ejecutar SQL completo del manual para crear todas las tablas.
+
+[TASK-008]
+Activar RLS en todas las tablas.
+
+[TASK-009]
+Configurar políticas:
+
+* Lectura pública (products, classes, gallery, etc)
+* Escritura solo autenticado admin
+
+[TASK-010]
+Crear buckets de storage:
+
+* product-images
+* gallery
+* teachers
+* content
+
+[TASK-011]
+Insertar datos iniciales en site_config.
+
+---
+
+## FASE 2 — LAYOUT BASE
+
+[TASK-012]
+Crear layout principal del sitio (app/(site)/layout.tsx).
+
+[TASK-013]
+Desarrollar componente Header:
+
+* sticky
+* navegación
+* botón inscribirse
+
+[TASK-014]
+Desarrollar componente Footer.
+
+[TASK-015]
+Integrar Header + Footer en layout del sitio.
+
+[TASK-016]
+Crear layout del admin (app/(admin)/layout.tsx).
+
+[TASK-017]
+Crear componente Sidebar del admin.
+
+---
+
+## FASE 3 — AUTENTICACIÓN ADMIN
+
+[TASK-018]
+Implementar Supabase Auth.
+
+[TASK-019]
+Crear página /admin/login.
+
+[TASK-020]
+Implementar formulario login (email + password).
+
+[TASK-021]
+Crear middleware.ts para proteger rutas /admin.
+
+[TASK-022]
+Validar redirección si no hay sesión.
+
+---
+
+## FASE 4 — ADMIN CORE
+
+[TASK-023]
+Crear dashboard /admin.
+
+[TASK-024]
+Mostrar métricas básicas (productos, inscripciones, etc).
+
+[TASK-025]
+Crear sección /admin/shop.
+
+[TASK-026]
+Implementar ABM de productos:
+
+* crear
+* editar
+* eliminar
+
+[TASK-027]
+Implementar subida de imágenes a Supabase Storage (productos).
+
+[TASK-028]
+Crear sección /admin/clases.
+
+[TASK-029]
+Implementar ABM de clases con horarios JSON.
+
+[TASK-030]
+Crear sección /admin/profesores.
+
+[TASK-031]
+Implementar ABM de profesores.
+
+[TASK-032]
+Crear sección /admin/galeria.
+
+[TASK-033]
+Implementar subida múltiple de imágenes.
+
+[TASK-034]
+Implementar drag & drop en galería.
+
+[TASK-035]
+Crear sección /admin/inscripciones.
+
+[TASK-036]
+Mostrar tabla de registros con filtros.
+
+[TASK-037]
+Crear sección /admin/configuracion.
+
+[TASK-038]
+Implementar edición de:
+
+* WhatsApp
+* redes
+* SEO
+* datos del dojo
+
+---
+
+## FASE 5 — PAGE BUILDER
+
+[TASK-039]
+Crear tabla page_blocks (si no existe).
+
+[TASK-040]
+Crear ruta /admin/pages.
+
+[TASK-041]
+Listar páginas desde tabla pages.
+
+[TASK-042]
+Crear ruta /admin/pages/[id].
+
+[TASK-043]
+Crear componente PageBuilder.
+
+[TASK-044]
+Mostrar bloques ordenados por order_index.
+
+[TASK-045]
+Implementar drag & drop con react-beautiful-dnd.
+
+[TASK-046]
+Actualizar orden en Supabase al soltar.
+
+[TASK-047]
+Implementar botón "Agregar bloque".
+
+[TASK-048]
+Crear modal selector de tipos de bloque.
+
+[TASK-049]
+Implementar editores para cada tipo:
+
+* banner
+* texto
+* imagen
+* galeria
+* carrusel
+* stats
+* productos
+* formulario
+* whatsapp
+* video
+* mapa
+
+[TASK-050]
+Guardar contenido JSON de cada bloque.
+
+[TASK-051]
+Implementar toggle visible/oculto.
+
+[TASK-052]
+Implementar eliminación de bloques.
+
+---
+
+## FASE 6 — FRONTEND DINÁMICO
+
+[TASK-053]
+Crear BlockRenderer.
+
+[TASK-054]
+Mapear block_type → componente.
+
+[TASK-055]
+Crear componentes visuales:
+
+* BannerBlock
+* TextBlock
+* ImageBlock
+* GalleryBlock
+* CarouselBlock
+* StatsBlock
+* ProductsBlock
+* WhatsAppCTA
+
+[TASK-056]
+Conectar /home a page builder.
+
+[TASK-057]
+Renderizar bloques desde Supabase.
+
+---
+
+## FASE 7 — SITIO PÚBLICO
+
+[TASK-058]
+Crear rutas públicas:
+
+* /home
+* /clases
+* /shop
+* /inscripciones
+* /ubicacion
+* /contacto
+* /informacion
+
+[TASK-059]
+Implementar /clases (grid dinámico).
+
+[TASK-060]
+Implementar /clases/[slug].
+
+[TASK-061]
+Mostrar descripción + horarios.
+
+[TASK-062]
+Implementar botón WhatsApp por clase.
+
+[TASK-063]
+Implementar /shop (grid productos).
+
+[TASK-064]
+Implementar /shop/[slug].
+
+[TASK-065]
+Implementar selector de talles.
+
+[TASK-066]
+Crear función buildWhatsAppLink.
+
+[TASK-067]
+Integrar botón WhatsApp en productos.
+
+[TASK-068]
+Crear formulario /inscripciones.
+
+[TASK-069]
+Guardar datos en Supabase.
+
+[TASK-070]
+Abrir WhatsApp con mensaje dinámico.
+
+[TASK-071]
+Implementar /ubicacion con Google Maps embed.
+
+[TASK-072]
+Implementar /contacto.
+
+[TASK-073]
+Implementar /informacion con bloques.
+
+---
+
+## FASE 8 — OPTIMIZACIÓN Y FINAL
+
+[TASK-074]
+Implementar responsive mobile-first.
+
+[TASK-075]
+Optimizar imágenes con next/image.
+
+[TASK-076]
+Implementar meta tags SEO dinámicos.
+
+[TASK-077]
+Validar todos los flujos:
+
+* compra
+* inscripción
+* navegación
+
+[TASK-078]
+Deploy en Vercel.
+
+[TASK-079]
+Configurar variables de entorno en producción.
+
+[TASK-080]
+Probar build final sin errores.
+
+---
+
+## FIN DEL SISTEMA
+
+REGLAS:
+
+* No saltar tareas
+* No modificar arquitectura
+* Mantener consistencia con el manual
+* Cada TASK debe ser completada antes de avanzar
