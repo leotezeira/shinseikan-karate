@@ -41,6 +41,14 @@ export default function Footer() {
                   Inscripciones
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="/admin"
+                  className="text-white text-sm opacity-80 hover:opacity-100 hover:text-primary transition"
+                >
+                  Admin
+                </Link>
+              </li>
             </ul>
           </div>
 

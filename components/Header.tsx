@@ -69,6 +69,9 @@ export default function Header() {
           <Link href="/shop" onClick={closeMenu} className="text-white text-4xl font-anton tracking-widest hover:text-primary transition">
             SHOP
           </Link>
+          <Link href="/admin" onClick={closeMenu} className="text-white text-4xl font-anton tracking-widest hover:text-primary transition">
+            ADMIN
+          </Link>
           <Link href="/contacto" onClick={closeMenu} className="text-white text-4xl font-anton tracking-widest hover:text-primary transition">
             CONTACTO
           </Link>
